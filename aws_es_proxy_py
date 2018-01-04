@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+import app
+import config
+import logging
+from argparse import ArgumentParser
+from boto3 import session
+
+
+def _get_args():
+    parser = ArgumentParser()
+    required = parser.add_argument_group("required arguments")
+    parser.add_argument("-r", "--region", metavar="\b", default="eu-west-1",
+                        help="AWS service region used for AWS API calls.")
+    required.add_argument("-e", "--endpoint", metavar="\b", required=True,
+                          help="AWS service domain endpoint.")
+    return parser.parse_args()
+
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Proxy started")
+
+    args = _get_args()
+    credentials = session.Session().get_credentials()
+
+    if credentials:
+        logging.info("Successfully loaded AWS credentials from %s" %
+                     credentials.method)
+    else:
+        logging.error("No credential found")
+        exit(1)
+
+    config.aws_region = args.region
+    config.aws_endpoint = args.endpoint
+    config.aws_access_key = credentials.access_key
+    config.aws_secret_key = credentials.secret_key
+
+    app.start()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+boto3
+Flask
+aws_requests_auth
