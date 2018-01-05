@@ -3,7 +3,8 @@ import requests
 import config
 import json
 from flask import Flask, Response, request
-from requests_aws4auth import AWS4Auth
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
 
 app = Flask(__name__)
 
@@ -17,42 +18,46 @@ PROXY_RESP_HEADERS_BLACKLIST = ["connection", "content-length",
 def elastic(path):
     proxy_request_headers = {}
     requests_response = None
-    response = Response()
-    auth = AWS4Auth(config.aws_access_key,
-                    config.aws_secret_key, config.aws_region,
-                    config.aws_service)
+    response = app.make_response("")
+
+    aws_request = AWSRequest(method=request.method, url=path,
+                             data=request.get_data())
+    auth3 = SigV4Auth(config.aws_credentials, config.aws_service,
+                      config.aws_region).add_auth(aws_request)
+
     endpoint = config.aws_endpoint + request.path + "?" +\
         request.query_string.decode("utf-8")
 
-    for header in request.headers:
-        if header[0].lower() in PROXY_REQ_HEADERS_WHITELIST:
-            proxy_request_headers[header] = request.headers[header]
+    for header, value in request.headers.items():
+        if header.lower() in PROXY_REQ_HEADERS_WHITELIST:
+            proxy_request_headers[header] = value
 
     if request.method == "GET":
-        requests_response = requests.get(endpoint, auth=auth,
+        requests_response = requests.get(endpoint, auth=auth3,
                                          headers=proxy_request_headers)
     elif request.method == "POST":
-        data = json.dumps(request.get_data().decode("utf-8"))
+        data = request.get_data()
         requests_response = requests.post(
             endpoint,
-            auth=auth,
+            auth=auth3,
             data=data,
             headers=proxy_request_headers)
     elif request.method == "PUT":
-        data = json.dumps(request.get_data().decode("utf-8"))
+        data = request.get_data()
         requests_response = requests.put(
             endpoint,
-            auth=auth,
+            auth=auth3,
             data=data,
             headers=proxy_request_headers)
     else:
         return "Method is not allowed!"
 
     response.set_data(requests_response.content)
+    response.status_code = requests_response.status_code
 
-    for header in requests_response.headers:
+    for header, value in requests_response.headers.items():
         if header.lower() not in PROXY_RESP_HEADERS_BLACKLIST:
-            response.headers[header] = requests_response.headers[header]
+            response.headers[header] = value
 
     return response
 

@@ -22,19 +22,17 @@ def main():
     logging.info("Proxy started")
 
     args = _get_args()
-    credentials = session.Session().get_credentials()
+    config.aws_credentials = session.Session().get_credentials()
 
-    if credentials:
+    if config.aws_credentials:
         logging.info("Successfully loaded AWS credentials from %s" %
-                     credentials.method)
+                     config.aws_credentials.method)
     else:
         logging.error("No credential found")
         exit(1)
 
     config.aws_region = args.region
     config.aws_endpoint = args.endpoint
-    config.aws_access_key = credentials.access_key
-    config.aws_secret_key = credentials.secret_key
 
     app.start()
 
