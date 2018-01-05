@@ -13,56 +13,50 @@ PROXY_RESP_HEADERS_BLACKLIST = ["connection", "content-length",
                                 "content-encoding", "transfer-encoding"]
 
 
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=["GET", "POST", "PUT"])
 def elastic(path):
     proxy_request_headers = {}
     requests_response = None
-    response = app.make_response("")
+    response = Response()
+    session = requests.session()
+    session.headers["Connection"] = "close"
 
-    aws_request = AWSRequest(method=request.method, url=request.path,
+    endpoint = config.aws_endpoint + "/" + path + "?" +\
+        request.query_string.decode("utf-8")
+    aws_request = AWSRequest(method=request.method, url=endpoint,
                              data=request.get_data())
     auth = SigV4Auth(config.aws_credentials, config.aws_service,
                      config.aws_region).add_auth(aws_request)
-
-    endpoint = config.aws_endpoint + request.path + "?" +\
-        request.query_string.decode("utf-8")
 
     for header, value in request.headers.items():
         if header.lower() in PROXY_REQ_HEADERS_WHITELIST:
             proxy_request_headers[header] = value
 
     if request.method == "HEAD":
-        requests_response = requests.head(endpoint, auth=auth,
-                                          cookies=request.cookies,
-                                          headers=proxy_request_headers)
+        session_response = session.head(endpoint, auth=auth,
+                                        cookies=request.cookies,
+                                        headers=proxy_request_headers)
     elif request.method == "GET":
-        requests_response = requests.get(endpoint, auth=auth,
-                                         cookies=request.cookies,
-                                         headers=proxy_request_headers)
+        session_response = session.get(endpoint, auth=auth,
+                                       cookies=request.cookies,
+                                       headers=proxy_request_headers)
     elif request.method == "POST":
-        data = request.get_data()
-        requests_response = requests.post(
-            endpoint,
-            cookies=request.cookies,
-            auth=auth,
-            data=data,
-            headers=proxy_request_headers)
+        session_response = session.post(endpoint, cookies=request.cookies,
+                                        auth=auth, data=request.get_data(),
+                                        headers=proxy_request_headers)
     elif request.method == "PUT":
-        data = request.get_data()
-        requests_response = requests.put(
-            endpoint,
-            cookies=request.cookies,
-            auth=auth,
-            data=data,
-            headers=proxy_request_headers)
+        session_response = session.put(endpoint, cookies=request.cookies,
+                                       auth=auth, data=request.get_data(),
+                                       headers=proxy_request_headers)
     else:
         return "Method is not allowed!"
 
     if request.method != "HEAD":
-        response.set_data(requests_response.content)
-    response.status_code = requests_response.status_code
+        response.set_data(session_response.content)
+    response.status_code = session_response.status_code
 
-    for header, value in requests_response.headers.items():
+    for header, value in session_response.headers.items():
         if header.lower() not in PROXY_RESP_HEADERS_BLACKLIST:
             response.headers[header] = value
 
