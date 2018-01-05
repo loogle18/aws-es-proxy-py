@@ -11,7 +11,7 @@ def _get_args():
     parser = ArgumentParser()
     required = parser.add_argument_group("required arguments")
     parser.add_argument("-r", "--region", metavar="\b", default="eu-west-1",
-                        help="AWS service region used for AWS API calls.")
+                        help="AWS service region. Default is 'eu-west-1'")
     required.add_argument("-e", "--endpoint", metavar="\b", required=True,
                           help="AWS service domain endpoint.")
     return parser.parse_args()
