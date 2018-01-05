@@ -3,8 +3,7 @@ import requests
 import config
 import json
 from flask import Flask, Response, request
-from botocore.auth import SigV4Auth
-from botocore.awsrequest import AWSRequest
+from requests_aws_sign import AWSV4Sign
 
 app = Flask(__name__)
 
@@ -14,20 +13,18 @@ PROXY_RESP_HEADERS_BLACKLIST = ["connection", "content-length",
 
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=["GET", "POST", "PUT"])
+@app.route('/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
 def elastic(path):
-    proxy_request_headers = {}
+    proxy_request_headers = {"kbn-xsrf": "reporting"}
     requests_response = None
     response = Response()
     session = requests.session()
     session.headers["Connection"] = "close"
 
+    auth = AWSV4Sign(config.aws_credentials, config.aws_region,
+                     config.aws_service)
     endpoint = config.aws_endpoint + "/" + path + "?" +\
         request.query_string.decode("utf-8")
-    aws_request = AWSRequest(method=request.method, url=endpoint,
-                             data=request.get_data())
-    auth = SigV4Auth(config.aws_credentials, config.aws_service,
-                     config.aws_region).add_auth(aws_request)
 
     for header, value in request.headers.items():
         if header.lower() in PROXY_REQ_HEADERS_WHITELIST:
@@ -49,6 +46,10 @@ def elastic(path):
         session_response = session.put(endpoint, cookies=request.cookies,
                                        auth=auth, data=request.get_data(),
                                        headers=proxy_request_headers)
+    elif request.method == "DELETE":
+        session_response = session.delete(endpoint, auth=auth,
+                                          cookies=request.cookies,
+                                          headers=proxy_request_headers)
     else:
         return "Method is not allowed!"
 
@@ -60,10 +61,7 @@ def elastic(path):
         if header.lower() not in PROXY_RESP_HEADERS_BLACKLIST:
             response.headers[header] = value
 
-    if response.status_code == 200:
-        return response
-    else:
-        return ""
+    return response
 
 
 def start():
