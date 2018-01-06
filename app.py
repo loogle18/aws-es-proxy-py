@@ -1,7 +1,6 @@
 import boto3
 import requests
 import config
-import json
 from flask import Flask, Response, request
 from requests_aws_sign import AWSV4Sign
 
