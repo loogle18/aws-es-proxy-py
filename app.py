@@ -1,4 +1,3 @@
-import boto3
 import requests
 import config
 from flask import Flask, Response, request
@@ -11,8 +10,8 @@ PROXY_RESP_HEADERS_BLACKLIST = ["connection", "content-length",
                                 "content-encoding", "transfer-encoding"]
 
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>", methods=["HEAD", "GET", "POST", "PUT", "DELETE"])
 def elastic(path):
     proxy_request_headers = {"kbn-xsrf": "reporting"}
     requests_response = None
