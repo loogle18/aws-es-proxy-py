@@ -1,7 +1,7 @@
 import requests
 import config
 from flask import Flask, Response, request
-from requests_aws_sign import AWSV4Sign
+from aws_auth import AWSAuth
 
 app = Flask(__name__)
 
@@ -19,8 +19,7 @@ def elastic(path):
     session = requests.session()
     session.headers["Connection"] = "close"
 
-    auth = AWSV4Sign(config.aws_credentials, config.aws_region,
-                     config.aws_service)
+    auth = AWSAuth(config.aws_credentials, config.aws_region)
     endpoint = config.aws_endpoint + "/" + path + "?" +\
         request.query_string.decode("utf-8")
 
