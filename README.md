@@ -10,12 +10,20 @@ It supports following HTTP methods: **HEAD, GET, POST, PUT, DELETE**. So you can
 
 ## Configuring Credentials
 
-Before using **aws-es-proxy-py**, ensure that you've configured your AWS IAM user credentials. You can use [official aws cli](https://aws.amazon.com/cli/) to configure file with credentials or create it manually. Check `~/.aws/credentials` file before running app. It might look like:
+Before using **aws-es-proxy-py**, ensure that you've configured your AWS IAM user credentials.
+You can use [aws cli](https://aws.amazon.com/cli/) to configure file with credentials or create it manually. Check `~/.aws/credentials` file before running app. It might look like:
 
 ```
 [default]
 aws_access_key_id = ${MY_ACCESS_KEY}
 aws_secret_access_key = ${MY_SECRET_KEY}
+```
+
+Alternatively, just set following environment variables:
+
+```
+export AWS_ACCESS_KEY_ID=${MY_ACCESS_KEY}
+export AWS_SECRET_ACCESS_KEY=${MY_SECRET_KEY}
 ```
 
 ## Run

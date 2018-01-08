@@ -3,6 +3,7 @@
 import app
 import config
 import logging
+from os import environ
 from argparse import ArgumentParser
 from boto3 import session
 
@@ -23,10 +24,20 @@ def main():
 
     args = _get_args()
     config.aws_credentials = session.Session().get_credentials()
+    access_key = environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = environ.get("AWS_SECRET_ACCESS_KEY")
 
     if config.aws_credentials:
         logging.info("Successfully loaded AWS credentials from %s" %
                      config.aws_credentials.method)
+    elif access_key and secret_key:
+        config.aws_credentials = session.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key
+        ).get_credentials()
+        logging.info(
+            "Successfully loaded AWS credentials from environment variables"
+        )
     else:
         logging.error("No credential found")
         exit(1)
