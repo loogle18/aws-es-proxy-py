@@ -1,5 +1,5 @@
-import requests
 import config
+from requests import session as requests_session
 from flask import Flask, Response, request
 from aws_auth import AWSAuth
 
@@ -16,7 +16,7 @@ def elastic(path):
     proxy_request_headers = {"kbn-xsrf": "reporting"}
     requests_response = None
     response = Response()
-    session = requests.session()
+    session = requests_session()
     session.headers["Connection"] = "close"
 
     auth = AWSAuth(config.aws_credentials, config.aws_region)
