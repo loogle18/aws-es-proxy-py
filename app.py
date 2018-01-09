@@ -1,4 +1,5 @@
 import config
+from urllib.parse import parse_qs, urlencode, quote
 from requests import session as requests_session
 from flask import Flask, Response, request
 from aws_auth import AWSAuth
@@ -20,8 +21,11 @@ def elastic(path):
     session.headers["Connection"] = "close"
 
     auth = AWSAuth(config.aws_credentials, config.aws_region)
-    endpoint = config.aws_endpoint + "/" + path + "?" +\
-        request.query_string.decode("utf-8")
+    query_string = urlencode(
+        parse_qs(request.query_string.decode("utf-8"), keep_blank_values=True),
+        quote_via=quote, doseq=True
+    )
+    endpoint = config.aws_endpoint + "/" + path + "?" + query_string
 
     for header, value in request.headers.items():
         if header.lower() in PROXY_REQ_HEADERS_WHITELIST:
