@@ -30,6 +30,10 @@ export AWS_SECRET_ACCESS_KEY=${MY_SECRET_KEY}
 
 `python3 aws_es_proxy_py --region ${AWS_SERVICE_REGION} --endpoint ${AWS_ES_ENDPOINT}`
 
+You can specify local host and port to listen on. Example:
+
+`python3 aws_es_proxy_py -r us-west-2 -e https://sample.us-west-2.es.amazonaws.com -lh 0.0.0.0 -p 9200`
+
 Run `python3 aws_es_proxy_py -h` to see details
 
 ## Usage example:
