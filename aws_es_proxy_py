@@ -13,6 +13,16 @@ def _get_args():
     required = parser.add_argument_group("required arguments")
     parser.add_argument("-r", "--region", metavar="\b", default="eu-west-1",
                         help="AWS service region. Default is 'eu-west-1'")
+    parser.add_argument("-lh", "--host", metavar="\b",
+                        help="Local host to listen on. Default: 127.0.0.1",
+                        default="127.0.0.1")
+    parser.add_argument("-p", "--port", metavar="\b",
+                        help="Local port to listen on. Default: 5000",
+                        type=int, default=5000)
+    parser.add_argument("-d", "--debug", metavar="\b",
+                        help="Debug mode for app. By default it turned off. " +
+                        "Set one of the following values to turn it on: " +
+                        "'yes', 'true', 'on', 'y', 't', '1'", default="false")
     required.add_argument("-e", "--endpoint", metavar="\b", required=True,
                           help="AWS service domain endpoint.")
     return parser.parse_args()
@@ -42,6 +52,9 @@ def main():
         logging.error("No credential found")
         exit(1)
 
+    config.is_debug = args.debug.lower() in ('yes', 'true', 't', 'y', '1')
+    config.app_host = args.host
+    config.app_port = args.port
     config.aws_region = args.region
     config.aws_endpoint = args.endpoint
 

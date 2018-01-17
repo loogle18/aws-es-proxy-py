@@ -66,4 +66,4 @@ def elastic(path):
 
 
 def start():
-    app.run(debug=True)
+    app.run(host=config.app_host, port=config.app_port, debug=config.is_debug)
